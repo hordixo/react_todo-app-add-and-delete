@@ -7,6 +7,7 @@ type Props = {
   tempTodo: Todo | null;
   handleDeleteTodo: (id: number) => void;
   isPosting: boolean;
+  deletingTodoId: number | null;
 };
 
 export const TodoList: React.FC<Props> = ({
@@ -14,28 +15,11 @@ export const TodoList: React.FC<Props> = ({
   handleDeleteTodo,
   tempTodo,
   isPosting,
+  deletingTodoId,
 }) => {
   return (
     <>
       <section className="todoapp__main" data-cy="TodoList">
-        {tempTodo && (
-          <div className="todo" data-cy="Todo">
-            <label className="todo__status-label">
-              <input type="checkbox" className="todo__status" disabled />
-            </label>
-
-            <span className="todo__title">{tempTodo.title}</span>
-
-            <div
-              data-cy="TodoLoader"
-              className={`modal overlay ${isPosting ? 'is-active' : ''}`}
-            >
-              <div className="modal-background has-background-white-ter" />
-              <div className="loader" />
-            </div>
-          </div>
-        )}
-
         {todos.map(todo => (
           <div
             data-cy="Todo"
@@ -67,12 +51,35 @@ export const TodoList: React.FC<Props> = ({
             </button>
 
             {/* overlay will cover the todo while it is being deleted or updated */}
-            <div data-cy="TodoLoader" className="modal overlay">
+            <div
+              data-cy="TodoLoader"
+              className={`modal overlay ${deletingTodoId === todo.id ? 'is-active' : ''}`}
+            >
               <div className="modal-background has-background-white-ter" />
               <div className="loader" />
             </div>
           </div>
         ))}
+
+        {tempTodo && (
+          <div className="todo" data-cy="Todo">
+            <label className="todo__status-label">
+              <input type="checkbox" className="todo__status" disabled />
+            </label>
+
+            <span data-cy="TodoTitle" className="todo__title">
+              {tempTodo.title}
+            </span>
+
+            <div
+              data-cy="TodoLoader"
+              className={`modal overlay ${isPosting ? 'is-active' : ''}`}
+            >
+              <div className="modal-background has-background-white-ter" />
+              <div className="loader" />
+            </div>
+          </div>
+        )}
       </section>
     </>
   );

@@ -20,6 +20,8 @@ export const App: React.FC = () => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [tempTodo, setTempTodo] = useState<Todo | null>(null);
   const [isPosting, setIsPosting] = useState(false);
+  const [deletingTodoId, setDeletingTodoId] = useState<number | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
     setIsLoading(true);
@@ -30,6 +32,7 @@ export const App: React.FC = () => {
         setIsLoading(false);
       })
       .catch(() => {
+        setIsLoading(false);
         setErrorMessage('Unable to load todos');
       });
   }, []);
@@ -60,21 +63,39 @@ export const App: React.FC = () => {
   const completedTodos = todos.filter(todo => todo.completed);
 
   const handleDeleteTodo = async (id: number) => {
+    setDeletingTodoId(id);
+
     try {
       await deleteTodo(id);
       setTodos(prev => prev.filter(todo => todo.id !== id));
     } catch {
       setErrorMessage('Unable to delete a todo');
+    } finally {
+      setDeletingTodoId(null);
+      document.querySelector<HTMLInputElement>('.todoapp__new-todo')?.focus();
     }
   };
 
   const handleDeleteCompletedTodo = async () => {
-    try {
-      await Promise.all(completedTodos.map(todo => deleteTodo(todo.id)));
-      setTodos(prev => prev.filter(todo => !todo.completed));
-    } catch {
-      setErrorMessage('Unable to delete completed todos');
+    setIsProcessing(true);
+
+    let hasError = false;
+
+    for (const todo of completedTodos) {
+      try {
+        await deleteTodo(todo.id);
+
+        setTodos(prev => prev.filter(t => t.id !== todo.id));
+      } catch {
+        hasError = true;
+      }
     }
+
+    if (hasError) {
+      setErrorMessage('Unable to delete a todo');
+    }
+
+    setIsProcessing(false);
   };
 
   if (!USER_ID) {
@@ -92,14 +113,16 @@ export const App: React.FC = () => {
           setTodos={setTodos}
           isPosting={isPosting}
           setIsPosting={setIsPosting}
+          isProcessing={isProcessing}
         />
         {isLoading && <Loader />}
-        {todos.length > 0 && !isLoading && (
+        {(todos.length > 0 || tempTodo) && !isLoading && (
           <TodoList
             todos={visibleTodos}
             tempTodo={tempTodo}
             handleDeleteTodo={handleDeleteTodo}
             isPosting={isPosting}
+            deletingTodoId={deletingTodoId}
           />
         )}
         {/* Hide the footer if there are no todos */}
@@ -107,6 +130,7 @@ export const App: React.FC = () => {
           <Footer
             todos={todos}
             setFilterStatus={setFilterStatus}
+            completedTodos={completedTodos}
             handleDeleteCompletedTodo={handleDeleteCompletedTodo}
           />
         )}

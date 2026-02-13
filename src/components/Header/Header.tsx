@@ -15,6 +15,7 @@ type Props = {
   setTodos: Dispatch<SetStateAction<Todo[]>>;
   isPosting: boolean;
   setIsPosting: (value: boolean) => void;
+  isProcessing: boolean;
 };
 
 export const Header: React.FC<Props> = ({
@@ -23,6 +24,7 @@ export const Header: React.FC<Props> = ({
   setTodos,
   isPosting,
   setIsPosting,
+  isProcessing,
 }) => {
   const [title, setTitle] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
@@ -30,7 +32,9 @@ export const Header: React.FC<Props> = ({
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
-    if (!title.trim()) {
+    const trimmedTitle = title.trim();
+
+    if (!trimmedTitle) {
       setError('Title should not be empty');
 
       return;
@@ -38,7 +42,7 @@ export const Header: React.FC<Props> = ({
 
     const temp = {
       id: 0,
-      title,
+      title: trimmedTitle,
       completed: false,
       userId: USER_ID,
     };
@@ -54,13 +58,14 @@ export const Header: React.FC<Props> = ({
       });
 
       setTodos(prev => [...prev, addedTodo]);
-      setTempTodo(null);
       setTitle('');
     } catch {
       setError('Unable to add a todo');
       setTempTodo(null);
     } finally {
+      await new Promise(resolve => setTimeout(resolve, 100));
       setIsPosting(false);
+      setTempTodo(null);
     }
   };
 
@@ -69,6 +74,12 @@ export const Header: React.FC<Props> = ({
       inputRef.current?.focus();
     }
   }, [isPosting]);
+
+  useEffect(() => {
+    if (!isProcessing) {
+      inputRef.current?.focus();
+    }
+  }, [isProcessing]);
 
   return (
     <header className="todoapp__header">
