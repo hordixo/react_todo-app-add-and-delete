@@ -1,6 +1,6 @@
 /* eslint-disable jsx-a11y/label-has-associated-control */
 /* eslint-disable jsx-a11y/control-has-associated-label */
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { UserWarning } from './UserWarning';
 // import { client } from './utils/fetchClient';
 import { Todo } from './types/Todo';
@@ -9,19 +9,20 @@ import { TodoList } from './components/TodoList';
 import { Footer } from './components/Footer';
 import { Loader } from './components/Loader/Loader';
 import { deleteTodo, getTodos, USER_ID } from './api/todos';
-
-type Filter = 'all' | 'active' | 'completed';
+import { Filter } from './types/Filter';
+import { ErrorMessage } from './types/Errors';
 
 export const App: React.FC = () => {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
-  const [filterStatus, setFilterStatus] = useState<Filter>('all');
+  const [filterStatus, setFilterStatus] = useState<Filter>(Filter.All);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [tempTodo, setTempTodo] = useState<Todo | null>(null);
   const [isPosting, setIsPosting] = useState(false);
   const [deletingTodoId, setDeletingTodoId] = useState<number | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setIsLoading(true);
@@ -33,7 +34,7 @@ export const App: React.FC = () => {
       })
       .catch(() => {
         setIsLoading(false);
-        setErrorMessage('Unable to load todos');
+        setErrorMessage(ErrorMessage.LoadTodo);
       });
   }, []);
 
@@ -51,9 +52,9 @@ export const App: React.FC = () => {
 
   const visibleTodos = todos.filter(todo => {
     switch (filterStatus) {
-      case 'active':
+      case Filter.Active:
         return !todo.completed;
-      case 'completed':
+      case Filter.Completed:
         return todo.completed;
       default:
         return true;
@@ -69,10 +70,10 @@ export const App: React.FC = () => {
       await deleteTodo(id);
       setTodos(prev => prev.filter(todo => todo.id !== id));
     } catch {
-      setErrorMessage('Unable to delete a todo');
+      setErrorMessage(ErrorMessage.DeleteTodo);
     } finally {
       setDeletingTodoId(null);
-      document.querySelector<HTMLInputElement>('.todoapp__new-todo')?.focus();
+      inputRef.current?.focus();
     }
   };
 
@@ -85,17 +86,18 @@ export const App: React.FC = () => {
       try {
         await deleteTodo(todo.id);
 
-        setTodos(prev => prev.filter(t => t.id !== todo.id));
+        setTodos(prev => prev.filter(newTodo => newTodo.id !== todo.id));
       } catch {
         hasError = true;
       }
     }
 
     if (hasError) {
-      setErrorMessage('Unable to delete a todo');
+      setErrorMessage(ErrorMessage.DeleteTodo);
     }
 
     setIsProcessing(false);
+    inputRef.current?.focus();
   };
 
   if (!USER_ID) {
@@ -114,6 +116,7 @@ export const App: React.FC = () => {
           isPosting={isPosting}
           setIsPosting={setIsPosting}
           isProcessing={isProcessing}
+          inputRef={inputRef}
         />
         {isLoading && <Loader />}
         {(todos.length > 0 || tempTodo) && !isLoading && (

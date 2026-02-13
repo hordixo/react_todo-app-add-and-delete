@@ -3,11 +3,11 @@ import React, {
   FormEvent,
   SetStateAction,
   useEffect,
-  useRef,
   useState,
 } from 'react';
 import { postTodos, USER_ID } from '../../api/todos';
 import { Todo } from '../../types/Todo';
+import { ErrorMessage } from '../../types/Errors';
 
 type Props = {
   setError: (message: string) => void;
@@ -16,6 +16,7 @@ type Props = {
   isPosting: boolean;
   setIsPosting: (value: boolean) => void;
   isProcessing: boolean;
+  inputRef: React.RefObject<HTMLInputElement>;
 };
 
 export const Header: React.FC<Props> = ({
@@ -25,9 +26,9 @@ export const Header: React.FC<Props> = ({
   isPosting,
   setIsPosting,
   isProcessing,
+  inputRef,
 }) => {
   const [title, setTitle] = useState('');
-  const inputRef = useRef<HTMLInputElement>(null);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -35,7 +36,7 @@ export const Header: React.FC<Props> = ({
     const trimmedTitle = title.trim();
 
     if (!trimmedTitle) {
-      setError('Title should not be empty');
+      setError(ErrorMessage.EmptyTitle);
 
       return;
     }
@@ -60,7 +61,7 @@ export const Header: React.FC<Props> = ({
       setTodos(prev => [...prev, addedTodo]);
       setTitle('');
     } catch {
-      setError('Unable to add a todo');
+      setError(ErrorMessage.AddTodo);
       setTempTodo(null);
     } finally {
       await new Promise(resolve => setTimeout(resolve, 100));
@@ -70,27 +71,23 @@ export const Header: React.FC<Props> = ({
   };
 
   useEffect(() => {
-    if (!isPosting) {
-      inputRef.current?.focus();
-    }
-  }, [isPosting]);
+    inputRef.current?.focus();
+  }, []);
 
   useEffect(() => {
-    if (!isProcessing) {
+    if (!isPosting && !isProcessing) {
       inputRef.current?.focus();
     }
-  }, [isProcessing]);
+  }, [isPosting, isProcessing, inputRef]);
 
   return (
     <header className="todoapp__header">
-      {/* this button should have `active` class only if all todos are completed */}
       <button
         type="button"
         className="todoapp__toggle-all active"
         data-cy="ToggleAllButton"
       />
 
-      {/* Add a todo on form submit */}
       <form onSubmit={handleSubmit}>
         <input
           value={title}

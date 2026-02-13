@@ -1,6 +1,7 @@
 /* eslint-disable jsx-a11y/label-has-associated-control */
 import React from 'react';
 import { Todo } from '../../types/Todo';
+import classNames from 'classnames';
 
 type Props = {
   todos: Todo[];
@@ -53,7 +54,9 @@ export const TodoList: React.FC<Props> = ({
             {/* overlay will cover the todo while it is being deleted or updated */}
             <div
               data-cy="TodoLoader"
-              className={`modal overlay ${deletingTodoId === todo.id ? 'is-active' : ''}`}
+              className={classNames('modal', 'overlay', {
+                'is-active': deletingTodoId === todo.id,
+              })}
             >
               <div className="modal-background has-background-white-ter" />
               <div className="loader" />

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Todo } from '../../types/Todo';
+import { Filter } from '../../types/Filter';
 
 type Props = {
   todos: Todo[];
@@ -8,15 +9,13 @@ type Props = {
   handleDeleteCompletedTodo: () => void;
 };
 
-type Filter = 'all' | 'active' | 'completed';
-
 export const Footer: React.FC<Props> = ({
   todos,
   setFilterStatus,
   completedTodos,
   handleDeleteCompletedTodo,
 }) => {
-  const [filter, setFilter] = useState<Filter>('all');
+  const [filter, setFilter] = useState<Filter>(Filter.All);
 
   return (
     <footer className="todoapp__footer" data-cy="Footer">
@@ -31,8 +30,8 @@ export const Footer: React.FC<Props> = ({
           className={`filter__link ${filter === 'all' ? 'selected' : ''}`}
           data-cy="FilterLinkAll"
           onClick={() => {
-            setFilterStatus('all');
-            setFilter('all');
+            setFilterStatus(Filter.All);
+            setFilter(Filter.All);
           }}
         >
           All
@@ -43,8 +42,8 @@ export const Footer: React.FC<Props> = ({
           className={`filter__link ${filter === 'active' ? 'selected' : ''}`}
           data-cy="FilterLinkActive"
           onClick={() => {
-            setFilterStatus('active');
-            setFilter('active');
+            setFilterStatus(Filter.Active);
+            setFilter(Filter.Active);
           }}
         >
           Active
@@ -55,8 +54,8 @@ export const Footer: React.FC<Props> = ({
           className={`filter__link ${filter === 'completed' ? 'selected' : ''}`}
           data-cy="FilterLinkCompleted"
           onClick={() => {
-            setFilterStatus('completed');
-            setFilter('completed');
+            setFilterStatus(Filter.Completed);
+            setFilter(Filter.Completed);
           }}
         >
           Completed
